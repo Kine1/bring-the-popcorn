@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -110,7 +109,6 @@ public class MovieDetailActivity extends Activity {
         String movieGenre = sb.substring(0, sb.lastIndexOf(","));
 
         mMovieGenreTv.setText(movieGenre);
-        mMovieOverviewTv.setMovementMethod(new ScrollingMovementMethod());
         mMovieOverviewTv.setText(movie.getOverview());
     }
 
