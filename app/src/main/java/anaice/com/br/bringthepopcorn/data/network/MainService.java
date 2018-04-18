@@ -1,11 +1,12 @@
 package anaice.com.br.bringthepopcorn.data.network;
 
+import anaice.com.br.bringthepopcorn.BuildConfig;
 import retrofit2.Retrofit;
 
 @SuppressWarnings("unused")
 public class MainService {
 
-    public static final String MOVIE_DB_API_KEY = "";
+    public static final String MOVIE_DB_API_KEY = BuildConfig.API_KEY;
 
     private static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
 
