@@ -1,10 +1,19 @@
 # bring-the-popcorn
 Movie List App
 
-This App uses The Movie DB to fetch movie data. In order to use it, you must provide an MOVIE_DB_API_KEY.
-Get a free API_KEY by registering in the address: https://www.themoviedb.org/account/signup
-Then, inside the package data.network.MainService, fill the variable MOVIE_DB_API_KEY with your new key. 
+Before building the app, you must define an API_KEY (that you can get after signing up in https://www.themoviedb.org/account/signup).
+After checking out this project, you must create a file named gradle.properties inside the root directory (usually bring-the-popcorn)
+and setting two variables:
+org.gradle.jvmargs=-Xmx1536m
+API_KEY=""
 
-Este aplicativo utiliza o The Movie DB para buscar dados de filmes. Para que você consiga utilizá-lo, você deve fornecer uma API_KEY.
-Obtenha uma API_KEY gratuitamente ao registrar no endereço: https://www.themoviedb.org/account/signup
-Após obter a chave, preencha a variável MOVIE_DB_API_KEY dentro do pacote data.network.MainService com a sua chave.
+In the API_KEY put you movie db api key and build your project.
+
+
+Antes de compilar o código, você deve definir uma API_KEY (obtenha uma ao cadastrar em https://www.themoviedb.org/account/signup).
+Após fazer o checkout do projeto, é preciso criar um arquivo no diretório raiz (geralmente bring-the-popcorn) e iniciar duas variáveis:
+org.gradle.jvmargs=-Xmx1536m
+API_KEY=""
+
+A variável API+KEY é onde você deve colocar a sua chave, após isso inicie o Build do projeto.
+
