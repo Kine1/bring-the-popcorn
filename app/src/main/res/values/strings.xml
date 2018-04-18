@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Bring The Popcorn</string>
+
+    <!-- Menu -->
+    <string name="popular">Populares</string>
+    <string name="top_rated">Melhor Avaliados</string>
+
+    <!-- Lista de Filmes - Main Activity -->
+    <string name="movie_fake_title">Star Wars o Retorno do Rei</string>
+    <string name="movie_fake_score">7.8</string>
+    <string name="star_content_description">Uma estrela que serve como ícone para a pontuação do filme</string>
+    <string name="poster_content_description">Poster do filme na lista de filmes</string>
+    <string name="no_movie_found">Nenhum filme encontrado</string>
+    <string name="big_poster_content_description">Imagem grande do poster do filme</string>
+    <string name="no_movie_detail">Nenhum dado foi carregado, tente novamente</string>
+    <string name="movie_fake_release_date">10/18/2010</string>
+    <string name="movie_release_date_label">Data de Lançamento</string>
+    <string name="movie_fake_genre">Terror,Suspense</string>
+    <string name="movie_genre_label">Gênero</string>
+    <string name="movie_title_label">Título</string>
+    <string name="movie_overview_label">Sinopse</string>
+</resources>
