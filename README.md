@@ -15,5 +15,5 @@ Após fazer o checkout do projeto, é preciso criar um arquivo no diretório rai
 org.gradle.jvmargs=-Xmx1536m
 API_KEY=""
 
-A variável API+KEY é onde você deve colocar a sua chave, após isso inicie o Build do projeto.
+A variável API_KEY é onde você deve colocar a sua chave, após isso inicie o Build do projeto.
 
