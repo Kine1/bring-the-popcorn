@@ -1,6 +1,5 @@
-# bring-the-popcorn
 <h1>Bring the Popcorn</h1>
-<h6>This app lists all the popular and best rated movies from themoviedb API. It's a work in progress.</h6>
+<h5>This app lists all the popular and best rated movies from themoviedb API. It's a work in progress.</h5>
 
 Before building the app, you must define an API_KEY (that you can get after signing up in https://www.themoviedb.org/account/signup).<br/>
 After checking out this project, you must create a file named gradle.properties inside the root directory (usually bring-the-popcorn)
