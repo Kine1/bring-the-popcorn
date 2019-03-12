@@ -3,7 +3,7 @@ package anaice.com.br.bringthepopcorn.ui.moviedetail;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -94,8 +94,8 @@ public class MovieDetailActivity extends Activity {
     }
 
     private void fillScreenMovieData(Movie movie) {
-        Picasso.with(MovieDetailActivity.this).load(MainService.IMAGE_URL_500 + movie.getBackdrop_path()).into(mMovieBigPosterIv);
-        Picasso.with(MovieDetailActivity.this).load(MainService.IMAGE_URL_185 + movie.getPoster_path()).into(mMovieSmallPosterIv);
+        Picasso.get().load(MainService.IMAGE_URL_500 + movie.getBackdrop_path()).into(mMovieBigPosterIv);
+        Picasso.get().load(MainService.IMAGE_URL_185 + movie.getPoster_path()).into(mMovieSmallPosterIv);
         mMovieTitleTv.setText(movie.getTitle());
         mMovieRatingTv.setText(String.valueOf(movie.getVote_average()));
         mMovieReleaseDateTv.setText(DateUtils.getBrazilianDateFormat(movie.getRelease_date()));

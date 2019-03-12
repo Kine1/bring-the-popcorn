@@ -1,8 +1,8 @@
 package anaice.com.br.bringthepopcorn.ui.main;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +44,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
         Result movie = mMovies.get(position);
-        Picasso.with(mContext).load(MainService.IMAGE_URL_185 + movie.getPosterPath()).into(holder.moviePhotoIv);
+        Picasso.get().load(MainService.IMAGE_URL_185 + movie.getPosterPath()).into(holder.moviePhotoIv);
         holder.movieTitleTv.setText(movie.getTitle());
         holder.movieRatingTv.setText(String.valueOf(movie.getVoteAverage()));
     }
