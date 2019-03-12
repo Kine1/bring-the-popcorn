@@ -2,15 +2,20 @@ package anaice.com.br.bringthepopcorn.ui.moviedetail;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import anaice.com.br.bringthepopcorn.data.model.MovieReview;
+import anaice.com.br.bringthepopcorn.data.model.MovieTrailer;
+import anaice.com.br.bringthepopcorn.data.model.MovieTrailers;
 import anaice.com.br.bringthepopcorn.ui.main.MovieAdapter;
 import androidx.annotation.NonNull;
+
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.squareup.picasso.Picasso;
 
@@ -27,7 +32,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MovieDetailActivity extends Activity {
+public class MovieDetailActivity extends Activity implements TrailerAdapter.TrailerClickedListener {
 
     private MainService mMainService;
     private int mMovieId;
@@ -45,7 +50,9 @@ public class MovieDetailActivity extends Activity {
     private TextView mMovieLabelOverview;
     private TextView mEmptyText;
     private LinearLayout mMovieReviewsLayout;
+    private LinearLayout mMovieTrailersLayout;
     private RecyclerView mMovieReviewsRv;
+    private RecyclerView mMovieTrailersRv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +85,8 @@ public class MovieDetailActivity extends Activity {
         mEmptyText = findViewById(R.id.tv_empty_text);
         mMovieReviewsLayout = findViewById(R.id.llayout_movie_reviews);
         mMovieReviewsRv = findViewById(R.id.rv_movie_reviews);
+        mMovieTrailersLayout = findViewById(R.id.llayout_movie_trailers);
+        mMovieTrailersRv = findViewById(R.id.rv_movie_trailers);
 
         mEmptyText.setVisibility(View.INVISIBLE);
     }
@@ -90,6 +99,7 @@ public class MovieDetailActivity extends Activity {
                     Movie movie = response.body();
                     if (movie != null) {
                         fillScreenMovieData(movie);
+                        setupToolbar(movie.getTitle());
                     }
                 } else {
                     resetScreen();
@@ -102,6 +112,13 @@ public class MovieDetailActivity extends Activity {
                 resetScreen();
             }
         });
+    }
+
+    private void setupToolbar(String title) {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle(title);
+        setActionBar(toolbar);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     private void fillScreenMovieData(Movie movie) {
@@ -136,7 +153,8 @@ public class MovieDetailActivity extends Activity {
                         mMovieReviewsLayout.setVisibility(View.VISIBLE);
                         mMovieReviewsRv.setHasFixedSize(true);
                         mMovieReviewsRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
-                        mMovieReviewsRv.setAdapter(new ReviewAdapter(MovieDetailActivity.this, reviews.getUserReviews()));
+                        mMovieReviewsRv.setAdapter(new ReviewAdapter(MovieDetailActivity.this,
+                                                                     reviews.getUserReviews()));
                     } else {
                         mMovieReviewsLayout.setVisibility(View.GONE);
                     }
@@ -154,7 +172,44 @@ public class MovieDetailActivity extends Activity {
     }
 
     private void fetchTrailers() {
+        mMainService.getMovieService().getTrailers(mMovieId).enqueue(new Callback<MovieTrailers>() {
+            @Override
+            public void onResponse(@NonNull Call<MovieTrailers> call, @NonNull Response<MovieTrailers> response) {
+                if (response.isSuccessful()) {
+                    MovieTrailers trailers = response.body();
+                    if (trailers != null && trailers.getTrailers() != null && trailers.getTrailers().size() > 0) {
+                        mMovieTrailersLayout.setVisibility(View.VISIBLE);
+                        mMovieTrailersRv.setHasFixedSize(true);
+                        mMovieTrailersRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
+                        mMovieTrailersRv.setAdapter(new TrailerAdapter(MovieDetailActivity.this,
+                                                                      trailers.getTrailers(),
+                                                                      MovieDetailActivity.this));
+                    } else {
+                        mMovieTrailersLayout.setVisibility(View.GONE);
+                    }
+                } else {
+                    mMovieTrailersLayout.setVisibility(View.GONE);
+                }
+            }
 
+            @Override
+            public void onFailure(@NonNull Call<MovieTrailers> call,@NonNull Throwable t) {
+                mMovieTrailersLayout.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void openMovieTrailer(String videoPath) {
+        Intent youtubeIntent = new Intent(Intent.ACTION_VIEW);
+        youtubeIntent.setData(Uri.parse("https://www.youtube.com/watch?v=" + videoPath));
+        if (youtubeIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(youtubeIntent);
+        }
+    }
+
+    @Override
+    public void onTrailerClicked(MovieTrailer trailer) {
+        openMovieTrailer(trailer.getKey());
     }
 
     private void resetScreen() {
@@ -175,4 +230,5 @@ public class MovieDetailActivity extends Activity {
         mMovieBigPosterIv.setImageResource(android.R.color.transparent);
         mMovieStarRatingIv.setImageResource(android.R.color.transparent);
     }
+
 }

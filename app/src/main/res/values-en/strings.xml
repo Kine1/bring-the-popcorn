@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bring The Popcorn</string>
+    <string name="popular">Most popular</string>
+    <string name="top_rated">Highest rated</string>
+    <string name="movie_trailers">Trailers</string>
+    <string name="movie_reviews">User Reviews</string>
+    <string name="movie_genre_label">Genre</string>
+    <string name="movie_fake_genre">Horror</string>
+    <string name="movie_release_date_label">Release Date</string>
+    <string name="movie_fake_release_date">10/18/2010</string>
+    <string name="big_poster_content_description">Movie poster image</string>
+    <string name="no_movie_detail">No data available, please try again</string>
+    <string name="no_movie_found">Movies not found</string>
+    <string name="poster_content_description">Movie poster image</string>
+    <string name="star_content_description">Movie review star</string>
+    <string name="movie_fake_score">7.8</string>
+    <string name="movie_fake_title">Spider-man</string>
+    <string name="favorites">Bookmarked</string>
+    <string name="movie_title_label">Title</string>
+    <string name="movie_overview_label">Synopsis</string>
+</resources>

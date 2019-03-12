@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_movie_trailer_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/defaultMarginPadding"
+        android:maxLines="2"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_horizontal"
+        android:linksClickable="true"
+        android:textColor="@color/colorLink"
+        tools:text="Shourd link" />
+
+</LinearLayout>

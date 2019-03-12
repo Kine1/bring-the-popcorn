@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,11 +28,16 @@ import retrofit2.Response;
 public class MainActivity extends Activity implements MovieAdapter.ListItemClickListener {
 
     private RecyclerView mMoviesRv;
+    private static final int POPULAR_MOVIES = 1;
+    private static final int TOP_RATED_MOVIES = 2;
+    private static final int FAVORITE_MOVIES = 3;
+
 
     private int mNumberOfColumns;
     private MovieAdapter mAdapter;
     private MainService mMainService;
     private TextView mEmptyListTv;
+    private int selectedMovieFilter = POPULAR_MOVIES;
 
     public static final String MOVIE_ID = "MOVIE_ID";
     private final String TAG = MainActivity.this.getClass().getSimpleName();
@@ -49,7 +56,17 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
     @Override
     protected void onStart() {
         super.onStart();
-        loadPopularMovies();
+        switch (selectedMovieFilter) {
+            case TOP_RATED_MOVIES:
+                loadTopRatedMovies();
+                break;
+            case FAVORITE_MOVIES:
+                loadFavoriteMovies();
+                break;
+            default:
+                loadPopularMovies();
+                break;
+        }
     }
 
     private void initViewsAndRequiredVariables() {
@@ -83,18 +100,18 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
         mMainService.getMovieService().listPopularMovies().enqueue(new Callback<MovieDBResponse>() {
             @Override
             public void onResponse(@NonNull Call<MovieDBResponse> call, @NonNull Response<MovieDBResponse> response) {
-                if(response.isSuccessful()) {
+                if (response.isSuccessful()) {
                     Log.d(TAG, "Resposta obtida para filmes populares: " + response);
                     showMovieList();
                     mAdapter.updateMovies(response.body());
-                }else {
+                } else {
                     showEmptyListWarning();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<MovieDBResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Falha na busca de filmes populares: " + t.getMessage() );
+                Log.d(TAG, "Falha na busca de filmes populares: " + t.getMessage());
                 t.printStackTrace();
                 showEmptyListWarning();
             }
@@ -116,7 +133,7 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
 
             @Override
             public void onFailure(@NonNull Call<MovieDBResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Falha na busca de filmes bem avaliados" + t.getMessage() );
+                Log.d(TAG, "Falha na busca de filmes bem avaliados" + t.getMessage());
                 showEmptyListWarning();
             }
         });
@@ -154,14 +171,17 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
 
         switch (item.getItemId()) {
             case R.id.action_popular:
+                selectedMovieFilter = POPULAR_MOVIES;
                 loadPopularMovies();
                 return true;
 
             case R.id.action_top_rated:
+                selectedMovieFilter = TOP_RATED_MOVIES;
                 loadTopRatedMovies();
                 return true;
 
-             case R.id.action_favorites:
+            case R.id.action_favorites:
+                selectedMovieFilter = FAVORITE_MOVIES;
                 loadFavoriteMovies();
                 return true;
 
@@ -169,4 +189,5 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
 
         return super.onOptionsItemSelected(item);
     }
+
 }

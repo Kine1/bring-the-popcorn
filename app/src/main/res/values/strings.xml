@@ -22,6 +22,6 @@
     <string name="movie_overview_label">Sinopse</string>
 
     <!-- Movie Detail -->
-    <string name="movie_trailers">Vídeos</string>
+    <string name="movie_trailers">Trailers</string>
     <string name="movie_reviews">Opiniões de Usuários</string>
 </resources>
