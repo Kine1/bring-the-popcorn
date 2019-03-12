@@ -4,6 +4,7 @@
     <!-- Menu -->
     <string name="popular">Populares</string>
     <string name="top_rated">Melhor Avaliados</string>
+    <string name="favorites">Favoritos</string>
 
     <!-- Lista de Filmes - Main Activity -->
     <string name="movie_fake_title">Star Wars o Retorno do Rei</string>
@@ -19,4 +20,8 @@
     <string name="movie_genre_label">Gênero</string>
     <string name="movie_title_label">Título</string>
     <string name="movie_overview_label">Sinopse</string>
+
+    <!-- Movie Detail -->
+    <string name="movie_trailers">Vídeos</string>
+    <string name="movie_reviews">Opiniões de Usuários</string>
 </resources>

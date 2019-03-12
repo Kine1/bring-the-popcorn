@@ -122,6 +122,10 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
         });
     }
 
+    private void loadFavoriteMovies() {
+
+    }
+
     private void showEmptyListWarning() {
         mEmptyListTv.setVisibility(View.VISIBLE);
         mMoviesRv.setVisibility(View.GONE);
@@ -155,6 +159,10 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
 
             case R.id.action_top_rated:
                 loadTopRatedMovies();
+                return true;
+
+             case R.id.action_favorites:
+                loadFavoriteMovies();
                 return true;
 
         }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorCardBg">#59000000</color>
+    <color name="colorYellowReview">#ECCF1E</color>
+    <color name="colorDivider">#B4FFFFFF</color>
 </resources>
