@@ -1,41 +1,38 @@
 package anaice.com.br.bringthepopcorn.ui.moviedetail;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
-import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
-import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
-import anaice.com.br.bringthepopcorn.data.model.MovieReview;
-import anaice.com.br.bringthepopcorn.data.model.MovieTrailer;
-import anaice.com.br.bringthepopcorn.data.model.MovieTrailers;
-import anaice.com.br.bringthepopcorn.ui.main.MovieAdapter;
-import anaice.com.br.bringthepopcorn.util.AppExecutors;
-import androidx.annotation.NonNull;
-
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import com.squareup.picasso.Picasso;
 
 import anaice.com.br.bringthepopcorn.R;
+import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
+import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
 import anaice.com.br.bringthepopcorn.data.model.Genre;
 import anaice.com.br.bringthepopcorn.data.model.Movie;
+import anaice.com.br.bringthepopcorn.data.model.MovieReview;
+import anaice.com.br.bringthepopcorn.data.model.MovieTrailer;
+import anaice.com.br.bringthepopcorn.data.model.MovieTrailers;
 import anaice.com.br.bringthepopcorn.data.network.MainService;
 import anaice.com.br.bringthepopcorn.ui.main.MainActivity;
+import anaice.com.br.bringthepopcorn.util.AppExecutors;
 import anaice.com.br.bringthepopcorn.util.DateUtils;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MovieDetailActivity extends Activity implements TrailerAdapter.TrailerClickedListener {
+public class MovieDetailActivity extends AppCompatActivity implements TrailerAdapter.TrailerClickedListener {
 
     private MainService mMainService;
     private int mMovieId;
@@ -76,6 +73,11 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
         fetchMovie();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
     private void initViews() {
 
         mMovieBigPosterIv = findViewById(R.id.iv_movie_big_poster);
@@ -95,6 +97,7 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
         mMovieReviewsRv = findViewById(R.id.rv_movie_reviews);
         mMovieTrailersLayout = findViewById(R.id.llayout_movie_trailers);
         mMovieTrailersRv = findViewById(R.id.rv_movie_trailers);
+        mMovieBookmarkIv = findViewById(R.id.iv_movie_bookmark);
 
         mEmptyText.setVisibility(View.INVISIBLE);
     }
@@ -103,7 +106,7 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
         mMovieBookmarkIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if ()
+                //if ()
                 saveFavoriteMovie();
             }
         });
@@ -114,10 +117,10 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
             @Override
             public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
                 if (response.isSuccessful()) {
-                    Movie movie = response.body();
-                    if (movie != null) {
-                        fillScreenMovieData(movie);
-                        setupToolbar(movie.getTitle());
+                    mMovie = response.body();
+                    if (mMovie != null) {
+                        fillScreenMovieData(mMovie);
+                        setupToolbar(mMovie.getTitle());
                     }
                 } else {
                     resetScreen();
@@ -135,8 +138,8 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
     private void setupToolbar(String title) {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(title);
-        setActionBar(toolbar);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     private void fillScreenMovieData(Movie movie) {
@@ -232,13 +235,16 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
 
     private void saveFavoriteMovie() {
         if (mMovie != null) {
+            Log.d("MovieDetail", "Salvando favorito...");
             AppExecutors.getInstance().diskIO().execute(new Runnable() {
                 @Override
                 public void run() {
                     mDb.favoriteMovieDao().insert(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+                    Log.d("MovieDetail", "Insert ocorreu...");
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            Log.d("MovieDetail", "Atualizando imagem do favorito");
                             mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
                         }
                     });

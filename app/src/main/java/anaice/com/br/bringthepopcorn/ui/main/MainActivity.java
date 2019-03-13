@@ -1,36 +1,36 @@
 package anaice.com.br.bringthepopcorn.ui.main;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-
-import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
-import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
-import androidx.annotation.NonNull;
-import androidx.lifecycle.Observer;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import anaice.com.br.bringthepopcorn.R;
+import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
+import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
 import anaice.com.br.bringthepopcorn.data.model.MovieDBResponse;
+import anaice.com.br.bringthepopcorn.data.model.Result;
 import anaice.com.br.bringthepopcorn.data.network.MainService;
 import anaice.com.br.bringthepopcorn.ui.moviedetail.MovieDetailActivity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends Activity implements MovieAdapter.ListItemClickListener {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.ListItemClickListener {
 
     private RecyclerView mMoviesRv;
     private static final int POPULAR_MOVIES = 1;
@@ -48,6 +48,7 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
     private final String TAG = MainActivity.this.getClass().getSimpleName();
 
     private AppDatabase mDb;
+    private List<Result> mFavoriteMovies = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +80,7 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
     private void initViewsAndRequiredVariables() {
         mMoviesRv = findViewById(R.id.rv_movies);
         Toolbar toolbar = findViewById(R.id.toolbar);
-        setActionBar(toolbar);
+        setSupportActionBar(toolbar);
 
         mEmptyListTv = findViewById(R.id.tv_empty_movie_list);
 
@@ -150,8 +151,27 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
     private void loadFavoriteMovies() {
         mDb.favoriteMovieDao().getAll().observe(MainActivity.this, new Observer<List<FavoriteMovie>>() {
             @Override
-            public void onChanged(List<FavoriteMovie> favoriteMovies) {
+            public void onChanged(final List<FavoriteMovie> favoriteMovies) {
+                Log.d(TAG, "Recebeu filmes favoritos do banco. Size = " + favoriteMovies.size());
+                for (FavoriteMovie favoriteMovie: favoriteMovies) {
+                    mMainService.getMovieService().getMovieAsSingleResult(favoriteMovie.getId()).enqueue(new Callback<Result>() {
+                        @Override
+                        public void onResponse(Call<Result> call, Response<Result> response) {
+                            Log.d(TAG, "Chamada ao movie/{id} ocorreu");
+                            if (response.isSuccessful()) {
+                                Log.d(TAG, "Chamada ao movie/{id} foi bem sucedida");
+                                showMovieList();
+                                mFavoriteMovies.add(response.body());
+                                mAdapter.updateMovies(mFavoriteMovies);
+                            }
+                        }
 
+                        @Override
+                        public void onFailure(Call<Result> call, Throwable t) {
+                            Log.d(TAG, "Falha na busca de filmes favoritos " + t.getMessage());
+                        }
+                    });
+                }
             }
         });
     }
@@ -181,6 +201,8 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+        mFavoriteMovies.clear();
 
         switch (item.getItemId()) {
             case R.id.action_popular:

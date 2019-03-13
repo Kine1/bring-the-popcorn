@@ -3,6 +3,8 @@ package anaice.com.br.bringthepopcorn.ui.main;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,6 +58,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     public void updateMovies(MovieDBResponse movieDBResponse) {
         mMovies = movieDBResponse.getResults();
+        notifyDataSetChanged();
+    }
+
+    public void updateMovies(List<Result> favoriteMovies) {
+        Log.d("MovieAdapter", "Filmes no adapter foi atualizado");
+        mMovies = favoriteMovies;
         notifyDataSetChanged();
     }
 
