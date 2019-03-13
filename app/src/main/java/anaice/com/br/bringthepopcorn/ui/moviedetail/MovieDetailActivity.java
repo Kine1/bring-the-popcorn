@@ -5,10 +5,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
+import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
+import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
 import anaice.com.br.bringthepopcorn.data.model.MovieReview;
 import anaice.com.br.bringthepopcorn.data.model.MovieTrailer;
 import anaice.com.br.bringthepopcorn.data.model.MovieTrailers;
 import anaice.com.br.bringthepopcorn.ui.main.MovieAdapter;
+import anaice.com.br.bringthepopcorn.util.AppExecutors;
 import androidx.annotation.NonNull;
 
 import android.view.View;
@@ -39,6 +42,7 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
     private ImageView mMovieBigPosterIv;
     private ImageView mMovieSmallPosterIv;
     private ImageView mMovieStarRatingIv;
+    private ImageView mMovieBookmarkIv;
     private TextView mMovieRatingTv;
     private TextView mMovieTitleTv;
     private TextView mMovieReleaseDateTv;
@@ -53,6 +57,8 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
     private LinearLayout mMovieTrailersLayout;
     private RecyclerView mMovieReviewsRv;
     private RecyclerView mMovieTrailersRv;
+    private AppDatabase mDb;
+    private Movie mMovie;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +69,10 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
         mMovieId = intent.getIntExtra(MainActivity.MOVIE_ID, 0);
 
         mMainService = new MainService();
+        mDb = AppDatabase.getInstance(getApplicationContext());
 
         initViews();
+        setViewsListeners();
         fetchMovie();
     }
 
@@ -89,6 +97,16 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
         mMovieTrailersRv = findViewById(R.id.rv_movie_trailers);
 
         mEmptyText.setVisibility(View.INVISIBLE);
+    }
+
+    private void setViewsListeners() {
+        mMovieBookmarkIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if ()
+                saveFavoriteMovie();
+            }
+        });
     }
 
     private void fetchMovie() {
@@ -210,6 +228,41 @@ public class MovieDetailActivity extends Activity implements TrailerAdapter.Trai
     @Override
     public void onTrailerClicked(MovieTrailer trailer) {
         openMovieTrailer(trailer.getKey());
+    }
+
+    private void saveFavoriteMovie() {
+        if (mMovie != null) {
+            AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    mDb.favoriteMovieDao().insert(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    private void deleteFavoriteMovie() {
+        if (mMovie != null) {
+            AppExecutors.getInstance().diskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    mDb.favoriteMovieDao().delete(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_black_24dp));
+                        }
+                    });
+                }
+            });
+        }
+
     }
 
     private void resetScreen() {

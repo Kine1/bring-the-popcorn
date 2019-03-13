@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
+import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
+import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
 import androidx.annotation.NonNull;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -15,6 +18,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toolbar;
+
+import java.util.List;
 
 import anaice.com.br.bringthepopcorn.R;
 import anaice.com.br.bringthepopcorn.data.model.MovieDBResponse;
@@ -41,6 +46,8 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
 
     public static final String MOVIE_ID = "MOVIE_ID";
     private final String TAG = MainActivity.this.getClass().getSimpleName();
+
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +84,7 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
         mEmptyListTv = findViewById(R.id.tv_empty_movie_list);
 
         mMainService = new MainService();
+        mDb = AppDatabase.getInstance(getApplicationContext());
         showMovieList();
     }
 
@@ -140,7 +148,12 @@ public class MainActivity extends Activity implements MovieAdapter.ListItemClick
     }
 
     private void loadFavoriteMovies() {
+        mDb.favoriteMovieDao().getAll().observe(MainActivity.this, new Observer<List<FavoriteMovie>>() {
+            @Override
+            public void onChanged(List<FavoriteMovie> favoriteMovies) {
 
+            }
+        });
     }
 
     private void showEmptyListWarning() {
