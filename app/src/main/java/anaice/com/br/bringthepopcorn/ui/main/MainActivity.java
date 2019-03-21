@@ -25,6 +25,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,7 +33,10 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.ListItemClickListener {
 
-    private RecyclerView mMoviesRv;
+    @BindView(R.id.tv_empty_movie_list)
+    TextView mEmptyListTv;
+    @BindView(R.id.rv_movies)
+    RecyclerView mMoviesRv;
     private static final int POPULAR_MOVIES = 1;
     private static final int TOP_RATED_MOVIES = 2;
     private static final int FAVORITE_MOVIES = 3;
@@ -41,14 +45,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     private int mNumberOfColumns;
     private MovieAdapter mAdapter;
     private MainService mMainService;
-    private TextView mEmptyListTv;
+    private List<Result> mFavoriteMovies = new ArrayList<>();
     private int selectedMovieFilter = POPULAR_MOVIES;
 
     public static final String MOVIE_ID = "MOVIE_ID";
     private final String TAG = MainActivity.this.getClass().getSimpleName();
 
     private AppDatabase mDb;
-    private List<Result> mFavoriteMovies = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,11 +81,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     }
 
     private void initViewsAndRequiredVariables() {
-        mMoviesRv = findViewById(R.id.rv_movies);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        mEmptyListTv = findViewById(R.id.tv_empty_movie_list);
 
         mMainService = new MainService();
         mDb = AppDatabase.getInstance(getApplicationContext());
@@ -153,24 +153,26 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
             @Override
             public void onChanged(final List<FavoriteMovie> favoriteMovies) {
                 Log.d(TAG, "Recebeu filmes favoritos do banco. Size = " + favoriteMovies.size());
-                for (FavoriteMovie favoriteMovie: favoriteMovies) {
-                    mMainService.getMovieService().getMovieAsSingleResult(favoriteMovie.getId()).enqueue(new Callback<Result>() {
-                        @Override
-                        public void onResponse(Call<Result> call, Response<Result> response) {
-                            Log.d(TAG, "Chamada ao movie/{id} ocorreu");
-                            if (response.isSuccessful()) {
-                                Log.d(TAG, "Chamada ao movie/{id} foi bem sucedida");
-                                showMovieList();
-                                mFavoriteMovies.add(response.body());
-                                mAdapter.updateMovies(mFavoriteMovies);
-                            }
-                        }
+                for (FavoriteMovie favoriteMovie : favoriteMovies) {
+                    mMainService.getMovieService()
+                                .getMovieAsSingleResult(favoriteMovie.getId())
+                                .enqueue(new Callback<Result>() {
+                                    @Override
+                                    public void onResponse(Call<Result> call, Response<Result> response) {
+                                        Log.d(TAG, "Chamada ao movie/{id} ocorreu");
+                                        if (response.isSuccessful()) {
+                                            Log.d(TAG, "Chamada ao movie/{id} foi bem sucedida");
+                                            showMovieList();
+                                            mFavoriteMovies.add(response.body());
+                                            mAdapter.updateMovies(mFavoriteMovies);
+                                        }
+                                    }
 
-                        @Override
-                        public void onFailure(Call<Result> call, Throwable t) {
-                            Log.d(TAG, "Falha na busca de filmes favoritos " + t.getMessage());
-                        }
-                    });
+                                    @Override
+                                    public void onFailure(Call<Result> call, Throwable t) {
+                                        Log.d(TAG, "Falha na busca de filmes favoritos " + t.getMessage());
+                                    }
+                                });
                 }
             }
         });

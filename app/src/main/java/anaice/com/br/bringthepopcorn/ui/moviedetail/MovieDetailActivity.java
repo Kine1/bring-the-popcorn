@@ -28,39 +28,61 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MovieDetailActivity extends AppCompatActivity implements TrailerAdapter.TrailerClickedListener {
 
-    private MainService mMainService;
-    private int mMovieId;
-    private ImageView mMovieBigPosterIv;
-    private ImageView mMovieSmallPosterIv;
-    private ImageView mMovieStarRatingIv;
-    private ImageView mMovieBookmarkIv;
-    private TextView mMovieRatingTv;
-    private TextView mMovieTitleTv;
-    private TextView mMovieReleaseDateTv;
-    private TextView mMovieOverviewTv;
-    private TextView mMovieGenreTv;
-    private TextView mMovieLabelTitle;
-    private TextView mMovieLabelGenre;
-    private TextView mMovieLabelReleaseDate;
-    private TextView mMovieLabelOverview;
-    private TextView mEmptyText;
-    private LinearLayout mMovieReviewsLayout;
-    private LinearLayout mMovieTrailersLayout;
-    private RecyclerView mMovieReviewsRv;
-    private RecyclerView mMovieTrailersRv;
+    @BindView(R.id.iv_movie_big_poster)
+    ImageView mMovieBigPosterIv;
+    @BindView(R.id.iv_movie_poster)
+    ImageView mMovieSmallPosterIv;
+    @BindView(R.id.iv_movie_star_rating)
+    ImageView mMovieStarRatingIv;
+    @BindView(R.id.iv_movie_bookmark)
+    ImageView mMovieBookmarkIv;
+    @BindView(R.id.tv_movie_rating)
+    TextView mMovieRatingTv;
+    @BindView(R.id.tv_movie_title)
+    TextView mMovieTitleTv;
+    @BindView(R.id.tv_movie_release_date)
+    TextView mMovieReleaseDateTv;
+    @BindView(R.id.tv_movie_overview)
+    TextView mMovieOverviewTv;
+    @BindView(R.id.tv_movie_genre)
+    TextView mMovieGenreTv;
+    @BindView(R.id.label_movie_title)
+    TextView mMovieLabelTitle;
+    @BindView(R.id.label_movie_genre)
+    TextView mMovieLabelGenre;
+    @BindView(R.id.label_movie_release_date)
+    TextView mMovieLabelReleaseDate;
+    @BindView(R.id.label_movie_overview)
+    TextView mMovieLabelOverview;
+    @BindView(R.id.tv_empty_text)
+    TextView mEmptyText;
+    @BindView(R.id.llayout_movie_reviews)
+    LinearLayout mMovieReviewsLayout;
+    @BindView(R.id.llayout_movie_trailers)
+    LinearLayout mMovieTrailersLayout;
+    @BindView(R.id.rv_movie_reviews)
+    RecyclerView mMovieReviewsRv;
+    @BindView(R.id.rv_movie_trailers)
+    RecyclerView mMovieTrailersRv;
+
     private AppDatabase mDb;
     private Movie mMovie;
+    private MainService mMainService;
+    private int mMovieId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
+        ButterKnife.bind(this);
 
         Intent intent = getIntent();
         mMovieId = intent.getIntExtra(MainActivity.MOVIE_ID, 0);
@@ -68,7 +90,7 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         mMainService = new MainService();
         mDb = AppDatabase.getInstance(getApplicationContext());
 
-        initViews();
+        mEmptyText.setVisibility(View.INVISIBLE);
         setViewsListeners();
         fetchMovie();
     }
@@ -78,37 +100,11 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         super.onResume();
     }
 
-    private void initViews() {
-
-        mMovieBigPosterIv = findViewById(R.id.iv_movie_big_poster);
-        mMovieSmallPosterIv = findViewById(R.id.iv_movie_poster);
-        mMovieStarRatingIv = findViewById(R.id.iv_movie_star_rating);
-        mMovieTitleTv = findViewById(R.id.tv_movie_title);
-        mMovieRatingTv = findViewById(R.id.tv_movie_rating);
-        mMovieReleaseDateTv = findViewById(R.id.tv_movie_release_date);
-        mMovieOverviewTv = findViewById(R.id.tv_movie_overview);
-        mMovieGenreTv = findViewById(R.id.tv_movie_genre);
-        mMovieLabelTitle = findViewById(R.id.label_movie_title);
-        mMovieLabelGenre = findViewById(R.id.label_movie_genre);
-        mMovieLabelReleaseDate = findViewById(R.id.label_movie_release_date);
-        mMovieLabelOverview = findViewById(R.id.label_movie_overview);
-        mEmptyText = findViewById(R.id.tv_empty_text);
-        mMovieReviewsLayout = findViewById(R.id.llayout_movie_reviews);
-        mMovieReviewsRv = findViewById(R.id.rv_movie_reviews);
-        mMovieTrailersLayout = findViewById(R.id.llayout_movie_trailers);
-        mMovieTrailersRv = findViewById(R.id.rv_movie_trailers);
-        mMovieBookmarkIv = findViewById(R.id.iv_movie_bookmark);
-
-        mEmptyText.setVisibility(View.INVISIBLE);
-    }
-
     private void setViewsListeners() {
-        mMovieBookmarkIv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //if ()
+        mMovieBookmarkIv.setOnClickListener(view -> {
+            //if () {
                 saveFavoriteMovie();
-            }
+            //}
         });
     }
 
@@ -203,8 +199,8 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
                         mMovieTrailersRv.setHasFixedSize(true);
                         mMovieTrailersRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
                         mMovieTrailersRv.setAdapter(new TrailerAdapter(MovieDetailActivity.this,
-                                                                      trailers.getTrailers(),
-                                                                      MovieDetailActivity.this));
+                                                                       trailers.getTrailers(),
+                                                                       MovieDetailActivity.this));
                     } else {
                         mMovieTrailersLayout.setVisibility(View.GONE);
                     }
@@ -214,7 +210,7 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
             }
 
             @Override
-            public void onFailure(@NonNull Call<MovieTrailers> call,@NonNull Throwable t) {
+            public void onFailure(@NonNull Call<MovieTrailers> call, @NonNull Throwable t) {
                 mMovieTrailersLayout.setVisibility(View.GONE);
             }
         });
@@ -241,12 +237,9 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
                 public void run() {
                     mDb.favoriteMovieDao().insert(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
                     Log.d("MovieDetail", "Insert ocorreu...");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d("MovieDetail", "Atualizando imagem do favorito");
-                            mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
-                        }
+                    runOnUiThread(() -> {
+                        Log.d("MovieDetail", "Atualizando imagem do favorito");
+                        mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
                     });
                 }
             });
@@ -255,17 +248,9 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
 
     private void deleteFavoriteMovie() {
         if (mMovie != null) {
-            AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                @Override
-                public void run() {
-                    mDb.favoriteMovieDao().delete(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_black_24dp));
-                        }
-                    });
-                }
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                mDb.favoriteMovieDao().delete(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+                runOnUiThread(() -> mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_black_24dp)));
             });
         }
 

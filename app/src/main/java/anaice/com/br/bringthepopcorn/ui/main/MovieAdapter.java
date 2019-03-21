@@ -20,6 +20,8 @@ import anaice.com.br.bringthepopcorn.R;
 import anaice.com.br.bringthepopcorn.data.model.MovieDBResponse;
 import anaice.com.br.bringthepopcorn.data.model.Result;
 import anaice.com.br.bringthepopcorn.data.network.MainService;
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
@@ -73,16 +75,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder>{
 
     class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private final TextView movieTitleTv;
-        private final TextView movieRatingTv;
-        private final ImageView moviePhotoIv;
+        @BindView(R.id.tv_movie_title)
+        TextView movieTitleTv;
+        @BindView(R.id.tv_movie_rating)
+        TextView movieRatingTv;
+        @BindView(R.id.iv_movie_photo)
+        ImageView moviePhotoIv;
 
         ViewHolder(View itemView) {
             super(itemView);
-
-            movieTitleTv = itemView.findViewById(R.id.tv_movie_title);
-            movieRatingTv = itemView.findViewById(R.id.tv_movie_rating);
-            moviePhotoIv = itemView.findViewById(R.id.iv_movie_photo);
+            ButterKnife.bind(this, itemView);
 
             itemView.setOnClickListener(this);
         }
