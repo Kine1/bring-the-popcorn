@@ -4,4 +4,5 @@
     <color name="colorYellowReview">#ECCF1E</color>
     <color name="colorDivider">#B4FFFFFF</color>
     <color name="colorLink">#2196F3</color>
+    <color name="colorAccent">#FF9800</color>
 </resources>

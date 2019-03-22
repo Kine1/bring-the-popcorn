@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="anaice.com.br.bringthepopcorn.ui.moviedetail.MovieDetailActivity">
 
@@ -13,6 +13,7 @@
         android:layout_height="wrap_content" />
 
     <ScrollView
+        android:id="@+id/scroll_movie_data"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -259,5 +260,11 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/progress_fetch_movie"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"/>
 
 </LinearLayout>

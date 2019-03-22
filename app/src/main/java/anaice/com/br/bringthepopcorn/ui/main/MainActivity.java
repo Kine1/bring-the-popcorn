@@ -22,6 +22,7 @@ import anaice.com.br.bringthepopcorn.ui.moviedetail.MovieDetailActivity;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -149,16 +150,19 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     }
 
     private void loadFavoriteMovies() {
-        mDb.favoriteMovieDao().getAll().observe(MainActivity.this, new Observer<List<FavoriteMovie>>() {
+        mFavoriteMovies.clear();
+        LiveData<List<FavoriteMovie>> movieLiveDataList = mDb.favoriteMovieDao().getAll();
+        movieLiveDataList.observe(MainActivity.this, new Observer<List<FavoriteMovie>>() {
             @Override
             public void onChanged(final List<FavoriteMovie> favoriteMovies) {
+                movieLiveDataList.removeObserver(this);
                 Log.d(TAG, "Recebeu filmes favoritos do banco. Size = " + favoriteMovies.size());
                 for (FavoriteMovie favoriteMovie : favoriteMovies) {
                     mMainService.getMovieService()
                                 .getMovieAsSingleResult(favoriteMovie.getId())
                                 .enqueue(new Callback<Result>() {
                                     @Override
-                                    public void onResponse(Call<Result> call, Response<Result> response) {
+                                    public void onResponse(@NonNull Call<Result> call, @NonNull Response<Result> response) {
                                         Log.d(TAG, "Chamada ao movie/{id} ocorreu");
                                         if (response.isSuccessful()) {
                                             Log.d(TAG, "Chamada ao movie/{id} foi bem sucedida");
@@ -169,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
                                     }
 
                                     @Override
-                                    public void onFailure(Call<Result> call, Throwable t) {
+                                    public void onFailure(@NonNull Call<Result> call, @NonNull Throwable t) {
                                         Log.d(TAG, "Falha na busca de filmes favoritos " + t.getMessage());
                                     }
                                 });

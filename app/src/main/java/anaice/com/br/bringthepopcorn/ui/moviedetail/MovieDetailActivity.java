@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -73,6 +75,10 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     RecyclerView mMovieReviewsRv;
     @BindView(R.id.rv_movie_trailers)
     RecyclerView mMovieTrailersRv;
+    @BindView(R.id.scroll_movie_data)
+    ScrollView mScrollMovieData;
+    @BindView(R.id.progress_fetch_movie)
+    ProgressBar mProgressFetchMovie;
 
     private AppDatabase mDb;
     private Movie mMovie;
@@ -126,9 +132,11 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     }
 
     private void fetchMovie() {
+        showLoadingFetchMovie();
         mMainService.getMovieService().getMovie(mMovieId).enqueue(new Callback<Movie>() {
             @Override
             public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
+                hideLoadingFetchMovie();
                 if (response.isSuccessful()) {
                     mMovie = response.body();
                     if (mMovie != null) {
@@ -143,6 +151,7 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
             @Override
             public void onFailure(@NonNull Call<Movie> call, @NonNull Throwable t) {
                 t.printStackTrace();
+                hideLoadingFetchMovie();
                 resetScreen();
             }
         });
@@ -179,6 +188,16 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
 
     private LiveData<FavoriteMovie> getMovieFromDb() {
         return mDb.favoriteMovieDao().getFavoriteMovieById(mMovieId);
+    }
+
+    private void showLoadingFetchMovie() {
+        mProgressFetchMovie.setVisibility(View.VISIBLE);
+        mScrollMovieData.setVisibility(View.GONE);
+    }
+
+    private void hideLoadingFetchMovie() {
+        mProgressFetchMovie.setVisibility(View.GONE);
+        mScrollMovieData.setVisibility(View.VISIBLE);
     }
 
     private void fetchReviews() {
