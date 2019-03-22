@@ -26,6 +26,7 @@ import anaice.com.br.bringthepopcorn.util.DateUtils;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -77,6 +78,7 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     private Movie mMovie;
     private MainService mMainService;
     private int mMovieId;
+    private FavoriteMovie favoriteMovie;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,9 +92,22 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         mMainService = new MainService();
         mDb = AppDatabase.getInstance(getApplicationContext());
 
-        mEmptyText.setVisibility(View.INVISIBLE);
+        setVariablesInitialState();
         setViewsListeners();
         fetchMovie();
+    }
+
+    private void setVariablesInitialState() {
+        mEmptyText.setVisibility(View.INVISIBLE);
+
+        getMovieFromDb().observe(this, movie -> {
+            this.favoriteMovie = movie;
+            if (favoriteMovie == null) {
+                mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_yellow_24dp));
+            } else {
+                mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
+            }
+        });
     }
 
     @Override
@@ -102,9 +117,11 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
 
     private void setViewsListeners() {
         mMovieBookmarkIv.setOnClickListener(view -> {
-            //if () {
+            if (favoriteMovie == null) {
                 saveFavoriteMovie();
-            //}
+            } else {
+                deleteFavoriteMovie();
+            }
         });
     }
 
@@ -158,6 +175,10 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
 
         fetchReviews();
         fetchTrailers();
+    }
+
+    private LiveData<FavoriteMovie> getMovieFromDb() {
+        return mDb.favoriteMovieDao().getFavoriteMovieById(mMovieId);
     }
 
     private void fetchReviews() {
@@ -232,16 +253,13 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     private void saveFavoriteMovie() {
         if (mMovie != null) {
             Log.d("MovieDetail", "Salvando favorito...");
-            AppExecutors.getInstance().diskIO().execute(new Runnable() {
-                @Override
-                public void run() {
-                    mDb.favoriteMovieDao().insert(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
-                    Log.d("MovieDetail", "Insert ocorreu...");
-                    runOnUiThread(() -> {
-                        Log.d("MovieDetail", "Atualizando imagem do favorito");
-                        mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
-                    });
-                }
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                mDb.favoriteMovieDao().insert(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+                Log.d("MovieDetail", "Insert ocorreu...");
+                runOnUiThread(() -> {
+                    Log.d("MovieDetail", "Atualizando imagem do favorito");
+                    mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
+                });
             });
         }
     }
@@ -250,7 +268,7 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         if (mMovie != null) {
             AppExecutors.getInstance().diskIO().execute(() -> {
                 mDb.favoriteMovieDao().delete(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
-                runOnUiThread(() -> mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_black_24dp)));
+                runOnUiThread(() -> mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_yellow_24dp)));
             });
         }
 
