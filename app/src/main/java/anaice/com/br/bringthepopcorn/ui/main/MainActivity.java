@@ -3,34 +3,23 @@ package anaice.com.br.bringthepopcorn.ui.main;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import anaice.com.br.bringthepopcorn.R;
-import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
-import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
-import anaice.com.br.bringthepopcorn.data.model.MovieDBResponse;
 import anaice.com.br.bringthepopcorn.data.model.Result;
-import anaice.com.br.bringthepopcorn.data.network.MainService;
 import anaice.com.br.bringthepopcorn.ui.moviedetail.MovieDetailActivity;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.ListItemClickListener {
 
@@ -42,23 +31,25 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     private static final int TOP_RATED_MOVIES = 2;
     private static final int FAVORITE_MOVIES = 3;
 
-
     private int mNumberOfColumns;
     private MovieAdapter mAdapter;
-    private MainService mMainService;
-    private List<Result> mFavoriteMovies = new ArrayList<>();
-    private int selectedMovieFilter = POPULAR_MOVIES;
+    private int mSelectedMovieFilter = POPULAR_MOVIES;
+    private MainActivityViewModel mViewModel;
 
     public static final String MOVIE_ID = "MOVIE_ID";
-    private final String TAG = MainActivity.this.getClass().getSimpleName();
+    public static final String SELECTED_FILTER = "SELECTED_FILTER";
 
-    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        // Get selected movie filter
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_FILTER)) {
+            this.mSelectedMovieFilter = savedInstanceState.getInt(SELECTED_FILTER);
+        }
 
         initViewsAndRequiredVariables();
         defineNumberOfColumnsForOrientation();
@@ -68,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     @Override
     protected void onStart() {
         super.onStart();
-        switch (selectedMovieFilter) {
+        switch (mSelectedMovieFilter) {
             case TOP_RATED_MOVIES:
                 loadTopRatedMovies();
                 break;
@@ -81,12 +72,18 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
         }
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt(SELECTED_FILTER, mSelectedMovieFilter);
+    }
+
     private void initViewsAndRequiredVariables() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mMainService = new MainService();
-        mDb = AppDatabase.getInstance(getApplicationContext());
+        mViewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
         showMovieList();
     }
 
@@ -107,79 +104,24 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
     }
 
     private void loadPopularMovies() {
-        mMainService.getMovieService().listPopularMovies().enqueue(new Callback<MovieDBResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<MovieDBResponse> call, @NonNull Response<MovieDBResponse> response) {
-                if (response.isSuccessful()) {
-                    Log.d(TAG, "Resposta obtida para filmes populares: " + response);
-                    showMovieList();
-                    mAdapter.updateMovies(response.body());
-                } else {
-                    showEmptyListWarning();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<MovieDBResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Falha na busca de filmes populares: " + t.getMessage());
-                t.printStackTrace();
-                showEmptyListWarning();
-            }
-        });
+        mViewModel.getPopularMovies().observe(this, this::handleMoviesVisibility);
     }
 
     private void loadTopRatedMovies() {
-        mMainService.getMovieService().listTopRatedMovies().enqueue(new Callback<MovieDBResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<MovieDBResponse> call, @NonNull Response<MovieDBResponse> response) {
-                if (response.isSuccessful()) {
-                    Log.d(TAG, "Resposta obtida para filmes bem avaliados: " + response);
-                    showMovieList();
-                    mAdapter.updateMovies(response.body());
-                } else {
-                    showEmptyListWarning();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<MovieDBResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Falha na busca de filmes bem avaliados" + t.getMessage());
-                showEmptyListWarning();
-            }
-        });
+        mViewModel.getTopRatedMovies().observe(this, this::handleMoviesVisibility);
     }
 
     private void loadFavoriteMovies() {
-        mFavoriteMovies.clear();
-        LiveData<List<FavoriteMovie>> movieLiveDataList = mDb.favoriteMovieDao().getAll();
-        movieLiveDataList.observe(MainActivity.this, new Observer<List<FavoriteMovie>>() {
-            @Override
-            public void onChanged(final List<FavoriteMovie> favoriteMovies) {
-                movieLiveDataList.removeObserver(this);
-                Log.d(TAG, "Recebeu filmes favoritos do banco. Size = " + favoriteMovies.size());
-                for (FavoriteMovie favoriteMovie : favoriteMovies) {
-                    mMainService.getMovieService()
-                                .getMovieAsSingleResult(favoriteMovie.getId())
-                                .enqueue(new Callback<Result>() {
-                                    @Override
-                                    public void onResponse(@NonNull Call<Result> call, @NonNull Response<Result> response) {
-                                        Log.d(TAG, "Chamada ao movie/{id} ocorreu");
-                                        if (response.isSuccessful()) {
-                                            Log.d(TAG, "Chamada ao movie/{id} foi bem sucedida");
-                                            showMovieList();
-                                            mFavoriteMovies.add(response.body());
-                                            mAdapter.updateMovies(mFavoriteMovies);
-                                        }
-                                    }
+        mViewModel.getFavoriteMovies().observe(this, this::handleMoviesVisibility);
+    }
 
-                                    @Override
-                                    public void onFailure(@NonNull Call<Result> call, @NonNull Throwable t) {
-                                        Log.d(TAG, "Falha na busca de filmes favoritos " + t.getMessage());
-                                    }
-                                });
-                }
-            }
-        });
+    private void handleMoviesVisibility(List<Result> results) {
+        if (results != null) {
+            mAdapter.updateMovies(results);
+            showMovieList();
+        } else {
+            showEmptyListWarning();
+        }
     }
 
     private void showEmptyListWarning() {
@@ -207,22 +149,19 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.List
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
-        mFavoriteMovies.clear();
-
         switch (item.getItemId()) {
             case R.id.action_popular:
-                selectedMovieFilter = POPULAR_MOVIES;
+                mSelectedMovieFilter = POPULAR_MOVIES;
                 loadPopularMovies();
                 return true;
 
             case R.id.action_top_rated:
-                selectedMovieFilter = TOP_RATED_MOVIES;
+                mSelectedMovieFilter = TOP_RATED_MOVIES;
                 loadTopRatedMovies();
                 return true;
 
             case R.id.action_favorites:
-                selectedMovieFilter = FAVORITE_MOVIES;
+                mSelectedMovieFilter = FAVORITE_MOVIES;
                 loadFavoriteMovies();
                 return true;
 

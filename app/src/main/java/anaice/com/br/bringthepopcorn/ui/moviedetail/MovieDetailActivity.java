@@ -13,8 +13,9 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.Objects;
+
 import anaice.com.br.bringthepopcorn.R;
-import anaice.com.br.bringthepopcorn.data.db.AppDatabase;
 import anaice.com.br.bringthepopcorn.data.db.entity.FavoriteMovie;
 import anaice.com.br.bringthepopcorn.data.model.Genre;
 import anaice.com.br.bringthepopcorn.data.model.Movie;
@@ -29,6 +30,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -80,11 +83,10 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     @BindView(R.id.progress_fetch_movie)
     ProgressBar mProgressFetchMovie;
 
-    private AppDatabase mDb;
     private Movie mMovie;
-    private MainService mMainService;
     private int mMovieId;
     private FavoriteMovie favoriteMovie;
+    private MovieDetailViewModel mViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,10 +95,9 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         ButterKnife.bind(this);
 
         Intent intent = getIntent();
-        mMovieId = intent.getIntExtra(MainActivity.MOVIE_ID, 0);
-
-        mMainService = new MainService();
-        mDb = AppDatabase.getInstance(getApplicationContext());
+        if (intent.hasExtra(MainActivity.MOVIE_ID)) {
+            mMovieId = intent.getIntExtra(MainActivity.MOVIE_ID, 0);
+        }
 
         setVariablesInitialState();
         setViewsListeners();
@@ -106,7 +107,9 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     private void setVariablesInitialState() {
         mEmptyText.setVisibility(View.INVISIBLE);
 
-        getMovieFromDb().observe(this, movie -> {
+        mViewModel = ViewModelProviders.of(this).get(MovieDetailViewModel.class);
+
+        mViewModel.getMovieFromDb(mMovieId).observe(this, movie -> {
             this.favoriteMovie = movie;
             if (favoriteMovie == null) {
                 mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_yellow_24dp));
@@ -133,25 +136,13 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
 
     private void fetchMovie() {
         showLoadingFetchMovie();
-        mMainService.getMovieService().getMovie(mMovieId).enqueue(new Callback<Movie>() {
-            @Override
-            public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
-                hideLoadingFetchMovie();
-                if (response.isSuccessful()) {
-                    mMovie = response.body();
-                    if (mMovie != null) {
-                        fillScreenMovieData(mMovie);
-                        setupToolbar(mMovie.getTitle());
-                    }
-                } else {
-                    resetScreen();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Movie> call, @NonNull Throwable t) {
-                t.printStackTrace();
-                hideLoadingFetchMovie();
+        mViewModel.getMovie(mMovieId).observe(this, movie -> {
+            mMovie = movie;
+            hideLoadingFetchMovie();
+            if (movie != null) {
+                populateScreenWithMovieData(movie);
+                setupToolbar(movie.getTitle());
+            } else {
                 resetScreen();
             }
         });
@@ -161,10 +152,10 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(title);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
     }
 
-    private void fillScreenMovieData(Movie movie) {
+    private void populateScreenWithMovieData(Movie movie) {
         Picasso.get().load(MainService.IMAGE_URL_500 + movie.getBackdrop_path()).into(mMovieBigPosterIv);
         Picasso.get().load(MainService.IMAGE_URL_185 + movie.getPoster_path()).into(mMovieSmallPosterIv);
         mMovieTitleTv.setText(movie.getTitle());
@@ -186,10 +177,6 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         fetchTrailers();
     }
 
-    private LiveData<FavoriteMovie> getMovieFromDb() {
-        return mDb.favoriteMovieDao().getFavoriteMovieById(mMovieId);
-    }
-
     private void showLoadingFetchMovie() {
         mProgressFetchMovie.setVisibility(View.VISIBLE);
         mScrollMovieData.setVisibility(View.GONE);
@@ -201,56 +188,31 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     }
 
     private void fetchReviews() {
-        mMainService.getMovieService().getReviews(mMovieId).enqueue(new Callback<MovieReview>() {
-            @Override
-            public void onResponse(@NonNull Call<MovieReview> call, @NonNull Response<MovieReview> response) {
-                if (response.isSuccessful()) {
-                    MovieReview reviews = response.body();
-                    if (reviews != null && reviews.getUserReviews() != null && reviews.getUserReviews().size() > 0) {
-                        mMovieReviewsLayout.setVisibility(View.VISIBLE);
-                        mMovieReviewsRv.setHasFixedSize(true);
-                        mMovieReviewsRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
-                        mMovieReviewsRv.setAdapter(new ReviewAdapter(MovieDetailActivity.this,
-                                                                     reviews.getUserReviews()));
-                    } else {
-                        mMovieReviewsLayout.setVisibility(View.GONE);
-                    }
-                } else {
-                    mMovieReviewsLayout.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<MovieReview> call, @NonNull Throwable t) {
-                t.printStackTrace();
+        mViewModel.getMovieReviews(mMovieId).observe(this, movieReview -> {
+            if (movieReview != null && movieReview.getUserReviews() != null &&
+                movieReview.getUserReviews().size() > 0) {
+                mMovieReviewsLayout.setVisibility(View.VISIBLE);
+                mMovieReviewsRv.setHasFixedSize(true);
+                mMovieReviewsRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
+                mMovieReviewsRv.setAdapter(new ReviewAdapter(MovieDetailActivity.this,
+                                                             movieReview.getUserReviews()));
+            } else {
                 mMovieReviewsLayout.setVisibility(View.GONE);
             }
         });
     }
 
     private void fetchTrailers() {
-        mMainService.getMovieService().getTrailers(mMovieId).enqueue(new Callback<MovieTrailers>() {
-            @Override
-            public void onResponse(@NonNull Call<MovieTrailers> call, @NonNull Response<MovieTrailers> response) {
-                if (response.isSuccessful()) {
-                    MovieTrailers trailers = response.body();
-                    if (trailers != null && trailers.getTrailers() != null && trailers.getTrailers().size() > 0) {
-                        mMovieTrailersLayout.setVisibility(View.VISIBLE);
-                        mMovieTrailersRv.setHasFixedSize(true);
-                        mMovieTrailersRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
-                        mMovieTrailersRv.setAdapter(new TrailerAdapter(MovieDetailActivity.this,
-                                                                       trailers.getTrailers(),
-                                                                       MovieDetailActivity.this));
-                    } else {
-                        mMovieTrailersLayout.setVisibility(View.GONE);
-                    }
-                } else {
-                    mMovieTrailersLayout.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<MovieTrailers> call, @NonNull Throwable t) {
+        mViewModel.getMovieTrailers(mMovieId).observe(this, movieTrailers -> {
+            if (movieTrailers != null && movieTrailers.getTrailers() != null &&
+                movieTrailers.getTrailers().size() > 0) {
+                mMovieTrailersLayout.setVisibility(View.VISIBLE);
+                mMovieTrailersRv.setHasFixedSize(true);
+                mMovieTrailersRv.setLayoutManager(new LinearLayoutManager(MovieDetailActivity.this));
+                mMovieTrailersRv.setAdapter(new TrailerAdapter(MovieDetailActivity.this,
+                                                               movieTrailers.getTrailers(),
+                                                               MovieDetailActivity.this));
+            } else {
                 mMovieTrailersLayout.setVisibility(View.GONE);
             }
         });
@@ -271,26 +233,16 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
 
     private void saveFavoriteMovie() {
         if (mMovie != null) {
-            Log.d("MovieDetail", "Salvando favorito...");
-            AppExecutors.getInstance().diskIO().execute(() -> {
-                mDb.favoriteMovieDao().insert(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
-                Log.d("MovieDetail", "Insert ocorreu...");
-                runOnUiThread(() -> {
-                    Log.d("MovieDetail", "Atualizando imagem do favorito");
-                    mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
-                });
-            });
+            mViewModel.saveFavoriteMovie(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+            mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_yellow_24dp));
         }
     }
 
     private void deleteFavoriteMovie() {
         if (mMovie != null) {
-            AppExecutors.getInstance().diskIO().execute(() -> {
-                mDb.favoriteMovieDao().delete(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
-                runOnUiThread(() -> mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_yellow_24dp)));
-            });
+            mViewModel.deleteFavoriteMovie(new FavoriteMovie(mMovie.getId(), mMovie.getTitle()));
+            mMovieBookmarkIv.setImageDrawable(getDrawable(R.drawable.ic_bookmark_border_yellow_24dp));
         }
-
     }
 
     private void resetScreen() {
